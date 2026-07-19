@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>প্রিমিয়াম ইমেইল ড্যাশবোর্ড</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+    <style>
+        .ql-editor { color: #e2e8f0; }
+        .ql-toolbar {
+            background-color: #1e293b;
+            border-color: #334155 !important;
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+        }
+        #editor {
+            border-color: #334155 !important;
+            border-bottom-left-radius: 0.75rem;
+            border-bottom-right-radius: 0.75rem;
+        }
+        .ql-stroke { stroke: #94a3b8 !important; }
+        .ql-fill { fill: #94a3b8 !important; }
+    </style>
+</head>
+<body class="bg-slate-900 min-h-screen font-sans text-slate-100">
+
+    <div class="max-w-4xl mx-auto py-12 px-4">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent drop-shadow-sm">
+                ✉️ আনলিমিটেড ইমেইল প্রিমিয়াম সেন্ডার
+            </h1>
+            <p class="text-slate-400 mt-3 text-lg">আপনার নিজস্ব কালারফুল ও শক্তিশালী মার্কেটিং ড্যাশবোর্ড</p>
+        </div>
+
+        <div class="bg-slate-800/80 border border-slate-700/50 shadow-2xl rounded-2xl p-8 backdrop-blur-sm">
+            <form id="emailForm" class="space-y-6">
+                
+                <div>
+                    <label class="block text-cyan-400 font-semibold mb-2 text-sm tracking-wide uppercase">📬 ইমেইল লিস্ট (কমা দিয়ে আলাদা করুন):</label>
+                    <textarea id="emailList" rows="4" 
+                        class="w-full px-4 py-3 bg-slate-950/60 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-slate-200 placeholder-slate-500 transition duration-200 resize-none" 
+                        placeholder="example1@gmail.com, example2@gmail.com, example3@gmail.com"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-indigo-400 font-semibold mb-2 text-sm tracking-wide uppercase">📌 ইমেইল সাবজেক্ট (Subject):</label>
+                    <input type="text" id="emailSubject" 
+                        class="w-full px-4 py-3 bg-slate-950/60 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-slate-200 placeholder-slate-500 transition duration-200" 
+                        placeholder="আপনার ইমেইলের একটি আকর্ষণীয় শিরোনাম দিন">
+                </div>
+
+                <div>
+                    <label class="block text-purple-400 font-semibold mb-2 text-sm tracking-wide uppercase">📝 মূল মেসেজ (Message Body):</label>
+                    <div class="bg-slate-950/60 rounded-xl text-slate-200 overflow-hidden">
+                        <div id="editor" style="height: 280px; font-size: 16px;"></div>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" 
+                        class="w-full bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:from-cyan-400 hover:via-indigo-400 hover:to-purple-400 active:scale-[0.99] transition duration-150 text-lg cursor-pointer flex items-center justify-center gap-2">
+                        <span>🚀</span> মেইল পাঠানো শুরু করুন
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // আপনার দেওয়া ফায়ারবেজ কনফিগারেশন ডাটা
+        const firebaseConfig = {
+            apiKey: "AIzaSyDieUjlWmjBZJYRttEwbM87WquinKi7hws",
+            authDomain: "email-marketing-78e09.firebaseapp.com",
+            databaseURL: "https://email-marketing-78e09-default-rtdb.firebaseio.com",
+            projectId: "email-marketing-78e09",
+            storageBucket: "email-marketing-78e09.firebasestorage.app",
+            messagingSenderId: "453578344500",
+            appId: "1:453578344500:web:52a33623e83a08b794e261",
+            measurementId: "G-EKSEKDZ4ZL"
+        };
+
+        // ফায়ারবেজ ইনিশিয়ালাইজ করা
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // টেক্সট এডিটর চালু করার কনফিগারেশন
+        const quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'], 
+                    ['link', 'image'], 
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['clean']                                         
+                ]
+            }
+        });
+
+        // ফর্মে সাবমিট করলে ফায়ারবেজে ডাটা পাঠানোর কোড
+        document.getElementById('emailForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const emailList = document.getElementById('emailList').value;
+            const subject = document.getElementById('emailSubject').value;
+            const emailBody = quill.getSemanticHTML(); // ইমেজ ও লিংকসহ HTML ডাটা
+            
+            if(!emailList || !subject || !emailBody) {
+                alert('দয়া করে সবগুলো ঘর পূরণ করুন!');
+                return;
+            }
+
+            // ফায়ারবেজ রিয়েলটাইম ডাটাবেজে ডাটা পাঠানো
+            push(ref(database, 'campaigns'), {
+                emails: emailList,
+                subject: subject,
+                body: emailBody,
+                status: 'pending', // মেইলগুলো পরে পাঠানোর জন্য পেন্ডিং স্ট্যাটাস
+                timestamp: Date.now()
+            }).then(() => {
+                alert('সফলভাবে ডাটা ফায়ারবেজে জমা হয়েছে! 🚀');
+                // ফর্ম খালি করা
+                document.getElementById('emailForm').reset();
+                quill.setText('');
+            }).catch((error) => {
+                alert('ঝামেলা হয়েছে: ' + error.message);
+            });
+        });
+    </script>
+</body>
+</html>
